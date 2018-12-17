@@ -11,6 +11,7 @@ import { extend } from '../util';
  */
 export function isSameNodeType(node, vnode, hydrating) {
 	if (typeof vnode==='string' || typeof vnode==='number') {
+		//node.splitText!== undefined means it's a TextNode
 		return node.splitText!==undefined;
 	}
 	if (typeof vnode.nodeName==='string') {

@@ -13,6 +13,7 @@ let items = [];
  * @param {import('./component').Component} component The component to rerender
  */
 export function enqueueRender(component) {
+	//第一次qnqueue 延后deffer以让更多component进入items(renderqueue)
 	if (!component._dirty && (component._dirty = true) && items.push(component)==1) {
 		(options.debounceRendering || defer)(rerender);
 	}

@@ -9,7 +9,7 @@ import { enqueueRender } from './render-queue';
  * @param {object} props The initial component props
  * @param {object} context The initial context from parent components' getChildContext
  * @public
- *
+ * 
  * @example
  * class MyFoo extends Component {
  *   render(props, state) {

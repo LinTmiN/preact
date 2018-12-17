@@ -1,7 +1,7 @@
 import { VNode } from './vnode';
 import options from './options';
 
-
+// stack FILO
 const stack = [];
 
 const EMPTY_CHILDREN = [];
@@ -39,33 +39,42 @@ const EMPTY_CHILDREN = [];
  */
 export function h(nodeName, attributes) {
 	let children=EMPTY_CHILDREN, lastSimple, child, simple, i;
+	console.log(nodeName,attributes,'Hhhhh',...arguments)
 	for (i=arguments.length; i-- > 2; ) {
+		console.log('stack push')
 		stack.push(arguments[i]);
 	}
 	if (attributes && attributes.children!=null) {
+		console.log('attribures children')
 		if (!stack.length) stack.push(attributes.children);
 		delete attributes.children;
 	}
 	while (stack.length) {
 		if ((child = stack.pop()) && child.pop!==undefined) {
+			console.log("child is array",child)
 			for (i=child.length; i--; ) stack.push(child[i]);
 		}
 		else {
 			if (typeof child==='boolean') child = null;
-
+			//if typeof child === number||string simple=true
 			if ((simple = typeof nodeName!=='function')) {
+				console.log('simple',child)
 				if (child==null) child = '';
 				else if (typeof child==='number') child = String(child);
 				else if (typeof child!=='string') simple = false;
 			}
-
+			//if lastSimple&&simple concat 
 			if (simple && lastSimple) {
+				console.log('lastSimple',children,child)
 				children[children.length-1] += child;
+				console.log('lastSimple after',children,child)
 			}
 			else if (children===EMPTY_CHILDREN) {
+				console.log('first')
 				children = [child];
 			}
 			else {
+				console.log('second')
 				children.push(child);
 			}
 
@@ -78,7 +87,7 @@ export function h(nodeName, attributes) {
 	p.children = children;
 	p.attributes = attributes==null ? undefined : attributes;
 	p.key = attributes==null ? undefined : attributes.key;
-
+	console.log(p,'p')
 	// if a "vnode hook" is defined, pass every created VNode to it
 	if (options.vnode!==undefined) options.vnode(p);
 

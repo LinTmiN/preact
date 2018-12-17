@@ -18,12 +18,19 @@ export const recyclerComponents = [];
  */
 export function createComponent(Ctor, props, context) {
 	let inst, i = recyclerComponents.length;
-
+	
 	if (Ctor.prototype && Ctor.prototype.render) {
+
 		inst = new Ctor(props, context);
+
 		Component.call(inst, props, context);
+		const LogInst=new Ctor(props, context)
+		Component.call(LogInst, props, context)
+		console.log('inst extends Component',inst,Ctor,new Ctor(props,context),LogInst)
 	}
 	else {
+
+		console.log(inst,'inst is Component',Ctor)
 		inst = new Component(props, context);
 		inst.constructor = Ctor;
 		inst.render = doRender;
@@ -32,6 +39,7 @@ export function createComponent(Ctor, props, context) {
 
 	while (i--) {
 		if (recyclerComponents[i].constructor===Ctor) {
+			console.log(recyclerComponents)
 			inst.nextBase = recyclerComponents[i].nextBase;
 			recyclerComponents.splice(i, 1);
 			return inst;

@@ -16,6 +16,7 @@ import { removeNode } from '../dom/index';
  * @param {boolean} mountAll Whether or not to immediately mount all components
  */
 export function setComponentProps(component, props, renderMode, context, mountAll) {
+	console.log('setComponent',...arguments)
 	if (component._disable) return;
 	component._disable = true;
 
@@ -23,7 +24,7 @@ export function setComponentProps(component, props, renderMode, context, mountAl
 	component.__key = props.key;
 	delete props.ref;
 	delete props.key;
-
+	//component.base ！！
 	if (typeof component.constructor.getDerivedStateFromProps === 'undefined') {
 		if (!component.base || mountAll) {
 			if (component.componentWillMount) component.componentWillMount();
@@ -64,11 +65,13 @@ export function setComponentProps(component, props, renderMode, context, mountAl
  * @param {number} [renderMode] render mode, see constants.js for available options.
  * @param {boolean} [mountAll] Whether or not to immediately mount all components
  * @param {boolean} [isChild] ?
- * @private
- */
+ * @private 
+ */ 
 export function renderComponent(component, renderMode, mountAll, isChild) {
 	if (component._disable) return;
-
+	const tem=Object.assign({},component)
+	console.log(component, renderMode, mountAll, isChild,'renderComponent')
+	console.log("tem",tem)
 	let props = component.props,
 		state = component.state,
 		context = component.context,
@@ -82,14 +85,15 @@ export function renderComponent(component, renderMode, mountAll, isChild) {
 		skip = false,
 		snapshot = previousContext,
 		rendered, inst, cbase;
-
+	console.log(props,state,isUpdate,nextBase,skip,'orevvvvvv')
 	if (component.constructor.getDerivedStateFromProps) {
 		state = extend(extend({}, state), component.constructor.getDerivedStateFromProps(props, state));
 		component.state = state;
-	}
+	} 
 
 	// if updating
 	if (isUpdate) {
+		console.log("isUpdate")
 		component.props = previousProps;
 		component.state = previousState;
 		component.context = previousContext;
@@ -99,19 +103,23 @@ export function renderComponent(component, renderMode, mountAll, isChild) {
 			skip = true;
 		}
 		else if (component.componentWillUpdate) {
+			//Triggering the componentWillUpdate and pass the new props and state
 			component.componentWillUpdate(props, state, context);
 		}
+		//Update the props and state
 		component.props = props;
 		component.state = state;
 		component.context = context;
 	}
-
+	
 	component.prevProps = component.prevState = component.prevContext = component.nextBase = null;
 	component._dirty = false;
 
 	if (!skip) {
+		console.log('intoSkip')
 		rendered = component.render(props, state, context);
-
+		console.log(rendered,'rendered')
+		alert(component)
 		// context to pass to the child, can be updated via (grand-)parent component
 		if (component.getChildContext) {
 			context = extend(extend({}, context), component.getChildContext());
@@ -123,19 +131,20 @@ export function renderComponent(component, renderMode, mountAll, isChild) {
 
 		let childComponent = rendered && rendered.nodeName,
 			toUnmount, base;
-
+		console.log(childComponent,'childComponent')
 		if (typeof childComponent==='function') {
 			// set up high order component link
-
+			console.log("isFunction")
 			let childProps = getNodeProps(rendered);
 			inst = initialChildComponent;
-
+			console.log(inst,childComponent)
 			if (inst && inst.constructor===childComponent && childProps.key==inst.__key) {
+				console.log('same',inst,childComponent)
 				setComponentProps(inst, childProps, SYNC_RENDER, context, false);
 			}
 			else {
+				console.log('same else',component)
 				toUnmount = inst;
-
 				component._component = inst = createComponent(childComponent, childProps, context);
 				inst.nextBase = inst.nextBase || nextBase;
 				inst._parentComponent = component;
@@ -147,20 +156,23 @@ export function renderComponent(component, renderMode, mountAll, isChild) {
 		}
 		else {
 			cbase = initialBase;
-
+			console.log(cbase,'cbase')
 			// destroy high order component link
 			toUnmount = initialChildComponent;
+			console.log(toUnmount)
 			if (toUnmount) {
 				cbase = component._component = null;
 			}
 
 			if (initialBase || renderMode===SYNC_RENDER) {
+				console.log(SYNC_RENDER,initialBase)
 				if (cbase) cbase._component = null;
 				base = diff(cbase, rendered, context, mountAll || !isUpdate, initialBase && initialBase.parentNode, true);
 			}
 		}
 
 		if (initialBase && base!==initialBase && inst!==initialChildComponent) {
+			console.log(initialBase,base)
 			let baseParent = initialBase.parentNode;
 			if (baseParent && base!==baseParent) {
 				baseParent.replaceChild(base, initialBase);
@@ -171,13 +183,14 @@ export function renderComponent(component, renderMode, mountAll, isChild) {
 				}
 			}
 		}
-
+		console.log(console)
 		if (toUnmount) {
 			unmountComponent(toUnmount);
 		}
 
 		component.base = base;
 		if (base && !isChild) {
+			console.log(base,'ssssssssssssss',isChild)
 			let componentRef = component,
 				t = component;
 			while ((t=t._parentComponent)) {
@@ -220,6 +233,7 @@ export function renderComponent(component, renderMode, mountAll, isChild) {
  * @private
  */
 export function buildComponentFromVNode(dom, vnode, context, mountAll) {
+	console.log('buildCCCCCC',...arguments)
 	let c = dom && dom._component,
 		originalComponent = c,
 		oldDom = dom,
@@ -227,20 +241,24 @@ export function buildComponentFromVNode(dom, vnode, context, mountAll) {
 		isOwner = isDirectOwner,
 		props = getNodeProps(vnode);
 	while (c && !isOwner && (c=c._parentComponent)) {
+		console.log('is not Owner',c)
 		isOwner = c.constructor===vnode.nodeName;
 	}
 
 	if (c && isOwner && (!mountAll || c._component)) {
+		console.log('isOwner')
 		setComponentProps(c, props, ASYNC_RENDER, context, mountAll);
 		dom = c.base;
 	}
 	else {
 		if (originalComponent && !isDirectOwner) {
+			console.log('originalComponent',originalComponent)
 			unmountComponent(originalComponent);
 			dom = oldDom = null;
 		}
 
 		c = createComponent(vnode.nodeName, props, context);
+		console.log(c)
 		if (dom && !c.nextBase) {
 			c.nextBase = dom;
 			// passing dom/oldDom as nextBase will recycle it if unused, so bypass recycling on L229:
